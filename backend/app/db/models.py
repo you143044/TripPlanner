@@ -17,6 +17,8 @@ class TripRecord(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     # 用户标识(浏览器localStorage生成的UUID,安全体系接入后替换为账号ID)
     user_id: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    # 访问者IP(审计用,经nginx透传的真实客户端IP)
+    client_ip: Mapped[str] = mapped_column(String(64), nullable=True)
 
     # 用户选择的旅行参数
     city: Mapped[str] = mapped_column(String(64), nullable=False, index=True)

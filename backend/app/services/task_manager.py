@@ -85,7 +85,7 @@ class TripTaskManager:
 
     # ---------- 提交与查询 ----------
 
-    def submit(self, request: TripRequest, user_id: str) -> TripRecord:
+    def submit(self, request: TripRequest, user_id: str, client_ip: str = "") -> TripRecord:
         """创建任务记录并写入用户选择日志"""
         with SessionLocal() as db:
             ahead = db.query(TripRecord).filter(
@@ -93,6 +93,7 @@ class TripTaskManager:
             ).count()
             record = TripRecord(
                 user_id=user_id,
+                client_ip=client_ip,
                 city=request.city,
                 start_date=request.start_date,
                 end_date=request.end_date,
@@ -110,7 +111,7 @@ class TripTaskManager:
 
         # 用户选择日志(结构化,可直接grep/分析)
         logger.info(
-            f"trip_request|task_id={record.id}|user_id={user_id}"
+            f"trip_request|task_id={record.id}|user_id={user_id}|ip={client_ip or 'unknown'}"
             f"|city={request.city}|dates={request.start_date}~{request.end_date}"
             f"|travel_days={request.travel_days}|transportation={request.transportation}"
             f"|accommodation={request.accommodation}|preferences={','.join(request.preferences or [])}"
@@ -172,6 +173,7 @@ class TripTaskManager:
         for r in records:
             items.append({
                 "task_id": r.id,
+                "client_ip": r.client_ip or "",
                 "city": r.city,
                 "start_date": r.start_date,
                 "end_date": r.end_date,

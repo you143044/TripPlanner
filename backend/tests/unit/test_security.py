@@ -68,7 +68,7 @@ class TestRateLimit:
         # 防止真提交触发worker与LLM调用: 替换submit为打桩
         from app.services.task_manager import get_task_manager
         manager = get_task_manager()
-        monkeypatch.setattr(manager, "submit", lambda request, user_id: SimpleNamespace(
+        monkeypatch.setattr(manager, "submit", lambda request, user_id, client_ip="": SimpleNamespace(
             id="mock-task", status="pending", queue_position=1))
         # 限流键用独立key,不影响其它测试
         monkeypatch.setenv("X", "")  # noqa

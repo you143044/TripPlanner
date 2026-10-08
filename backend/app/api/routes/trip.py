@@ -1,10 +1,10 @@
 """旅行规划API路由 - 异步任务模式(限流排队+状态轮询+结果入库)"""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from ...models.schemas import TripRequest, TaskInfo, TaskDetail
 from ...agents.trip_planner_agent import validate_free_text, check_sensitive_content
 from ...services.task_manager import get_task_manager
-from ...core.security import rate_limit_dependency
+from ...core.security import rate_limit_dependency, get_client_ip
 from ...core.logger import get_logger
 
 logger = get_logger()
@@ -23,31 +23,33 @@ plan_rate_limit = rate_limit_dependency(limit=10, window_seconds=60, scope="trip
     dependencies=[Depends(plan_rate_limit)],
 )
 async def plan_trip(
-    request: TripRequest,
+    payload: TripRequest,
+    request: Request,
     x_user_id: str = Header(default="anonymous", description="前端localStorage生成的用户标识")
 ):
+    client_ip = get_client_ip(request)
     try:
         # 内容安全: 敏感词直接拒绝,不进入LLM
-        sensitive_hits = check_sensitive_content(request.free_text_input or "")
+        sensitive_hits = check_sensitive_content(payload.free_text_input or "")
         if sensitive_hits:
-            logger.warning(f"敏感内容拦截: user={x_user_id[:16]} hits={sensitive_hits}")
+            logger.warning(f"敏感内容拦截: ip={client_ip} user={x_user_id[:16]} hits={sensitive_hits}")
             raise HTTPException(
                 status_code=400,
                 detail="您输入的额外要求包含不当内容,请修改后重试。"
             )
 
         # 过滤不合理内容
-        if request.free_text_input:
-            cleaned = validate_free_text(request.free_text_input)
+        if payload.free_text_input:
+            cleaned = validate_free_text(payload.free_text_input)
             if not cleaned:
                 raise HTTPException(
                     status_code=400,
                     detail="额外的要求包含不合理内容,已被过滤为空,请重新输入有效需求。"
                 )
-            request.free_text_input = cleaned
+            payload.free_text_input = cleaned
 
         manager = get_task_manager()
-        record = manager.submit(request, user_id=x_user_id[:64])
+        record = manager.submit(payload, user_id=x_user_id[:64], client_ip=client_ip)
 
         return TaskInfo(
             success=True,
