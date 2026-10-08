@@ -36,7 +36,11 @@ services:
       - backend_logs:/app/logs
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # 高德Web端(JS API)Key,构建时注入(由根目录.env或shell环境提供)
+        VITE_AMAP_WEB_JS_KEY: "${VITE_AMAP_WEB_JS_KEY:-}"
     container_name: trip-planner-frontend
     restart: always
     ports:
