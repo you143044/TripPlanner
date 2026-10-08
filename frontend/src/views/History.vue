@@ -15,6 +15,43 @@
           <a-button type="primary" @click="goHome">开始规划旅行</a-button>
         </a-empty>
 
+        <!-- 移动端:卡片列表(6列表格在窄屏会挤压/溢出) -->
+        <div v-else-if="isMobile" class="history-cards">
+          <div v-for="record in items" :key="record.task_id" class="history-item">
+            <div class="hi-row-top">
+              <span class="city-name">{{ record.city }}</span>
+              <a-tag :color="statusColor(record.status)">{{ statusText(record.status) }}</a-tag>
+            </div>
+            <div v-if="record.status === 'success'" class="city-meta">
+              {{ record.travel_days }}天 · {{ record.start_date }}~{{ record.end_date }}
+            </div>
+            <div v-if="record.preferences && record.preferences.length" class="hi-tags">
+              <a-tag v-for="p in record.preferences" :key="p" color="purple" class="pref-tag">{{ p }}</a-tag>
+            </div>
+            <div v-if="record.free_text_input" class="hi-free">{{ record.free_text_input }}</div>
+            <div class="hi-row-bottom">
+              <span class="hi-time">{{ formatTime(record.created_at) }}</span>
+              <a-button
+                v-if="record.status === 'success'"
+                type="primary"
+                size="small"
+                ghost
+                @click="openPlan(record)"
+              >查看详情</a-button>
+              <span v-else-if="record.status === 'failed'" class="muted" :title="record.error_message">已失败</span>
+            </div>
+          </div>
+          <a-pagination
+            v-if="total > pageSize"
+            class="history-pagination"
+            :current="currentPage"
+            :page-size="pageSize"
+            :total="total"
+            size="small"
+            @change="handlePageChange"
+          />
+        </div>
+
         <a-table
           v-else
           :columns="columns"
@@ -75,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { getTripHistory, getTaskStatus } from '@/services/api'
@@ -98,18 +135,20 @@ const columns = [
 
 const pagination = computed(() => ({
   total: total.value,
-  current: Math.floor(offset / pageSize.value) + 1,
+  current: Math.floor(offset.value / pageSize.value) + 1,
   pageSize: pageSize.value,
   showSizeChanger: true,
   showTotal: (t: number) => `共 ${t} 条记录`
 }))
 
-let offset = 0
+const currentPage = computed(() => Math.floor(offset.value / pageSize.value) + 1)
+
+const offset = ref(0)
 
 const loadHistory = async () => {
   loading.value = true
   try {
-    const res = await getTripHistory(pageSize.value, offset)
+    const res = await getTripHistory(pageSize.value, offset.value)
     items.value = res.items || []
     total.value = res.total || 0
   } catch (e: any) {
@@ -121,7 +160,12 @@ const loadHistory = async () => {
 
 const handleTableChange = (pag: { current?: number; pageSize?: number }) => {
   pageSize.value = pag.pageSize || 10
-  offset = ((pag.current || 1) - 1) * pageSize.value
+  offset.value = ((pag.current || 1) - 1) * pageSize.value
+  loadHistory()
+}
+
+const handlePageChange = (page: number) => {
+  offset.value = (page - 1) * pageSize.value
   loadHistory()
 }
 
@@ -155,7 +199,19 @@ const formatTime = (t?: string) => {
 
 const goHome = () => router.push('/')
 
-onMounted(loadHistory)
+// 移动端用卡片列表替代表格
+const isMobile = ref(false)
+const updateIsMobile = () => { isMobile.value = window.innerWidth <= 768 }
+
+onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
+  loadHistory()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
 </script>
 
 <style scoped>
@@ -230,9 +286,62 @@ onMounted(loadHistory)
   color: #bbb;
 }
 
+/* 移动端卡片列表 */
+.history-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.hi-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.hi-tags {
+  margin-top: 6px;
+}
+
+.hi-free {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #666;
+  word-break: break-all;
+}
+
+.hi-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.hi-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.history-pagination {
+  text-align: center;
+  margin-top: 4px;
+}
+
 @media (max-width: 768px) {
-  .history-container { padding: 20px 8px 40px; }
-  .page-title { font-size: 24px; }
+  .history-container { padding: 16px 8px 40px; }
+  .page-title { font-size: 22px; }
+  .page-subtitle { font-size: 13px; }
   .back-btn { left: 8px; font-size: 12px; }
+  .history-card { border-radius: 12px; }
 }
 </style>

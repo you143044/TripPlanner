@@ -30,7 +30,7 @@
           </div>
 
           <a-row :gutter="24">
-            <a-col :span="8">
+            <a-col :xs="24" :sm="24" :md="8">
               <a-form-item name="city" :rules="[{ required: true, message: '请输入目的地城市' }]">
                 <template #label>
                   <span class="form-label">目的地城市</span>
@@ -47,7 +47,7 @@
                 </a-input>
               </a-form-item>
             </a-col>
-            <a-col :span="6">
+            <a-col :xs="12" :sm="12" :md="6">
               <a-form-item name="start_date" :rules="[{ required: true, message: '请选择开始日期' }]">
                 <template #label>
                   <span class="form-label">开始日期</span>
@@ -61,7 +61,7 @@
                 />
               </a-form-item>
             </a-col>
-            <a-col :span="6">
+            <a-col :xs="12" :sm="12" :md="6">
               <a-form-item name="end_date" :rules="[{ required: true, message: '请选择结束日期' }]">
                 <template #label>
                   <span class="form-label">结束日期</span>
@@ -75,7 +75,7 @@
                 />
               </a-form-item>
             </a-col>
-            <a-col :span="4">
+            <a-col :xs="24" :sm="24" :md="4">
               <a-form-item>
                 <template #label>
                   <span class="form-label">旅行天数</span>
@@ -97,7 +97,7 @@
           </div>
 
           <a-row :gutter="24">
-            <a-col :span="8">
+            <a-col :xs="24" :sm="12" :md="8">
               <a-form-item name="transportation">
                 <template #label>
                   <span class="form-label">交通方式</span>
@@ -110,7 +110,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :span="8">
+            <a-col :xs="24" :sm="12" :md="8">
               <a-form-item name="accommodation">
                 <template #label>
                   <span class="form-label">住宿偏好</span>
@@ -123,7 +123,7 @@
                 </a-select>
               </a-form-item>
             </a-col>
-            <a-col :span="8">
+            <a-col :xs="24" :sm="12" :md="8">
               <a-form-item name="preferences">
                 <template #label>
                   <span class="form-label">旅行偏好</span>
@@ -690,23 +690,25 @@ onUnmounted(() => { clearAllTimers() })
 
 /* ========== 移动端响应式 ========== */
 @media (max-width: 768px) {
-  .home-container { padding: 20px 10px !important; }
+  .home-container { padding: 16px 10px 24px !important; }
+  .page-header { margin-bottom: 20px !important; }
   .page-title { font-size: 26px !important; letter-spacing: 0 !important; }
   .page-subtitle { font-size: 13px !important; padding: 0 10px; }
   .icon { font-size: 48px !important; }
+  .icon-wrapper { margin-bottom: 8px !important; }
   .form-card { border-radius: 12px !important; max-width: 100% !important; }
+  .form-card :deep(.ant-card-body) { padding: 12px !important; }
   .form-section { padding: 12px !important; margin-bottom: 12px !important; }
-  .form-section .ant-row { flex-direction: column !important; }
-  .form-section .ant-col {
-    width: 100% !important; max-width: 100% !important; flex: none !important;
-    margin-bottom: 8px !important;
-  }
+  .form-section .ant-col { margin-bottom: 4px !important; }
+  .section-header { margin-bottom: 12px !important; padding-bottom: 8px !important; }
   .submit-button { height: 48px !important; font-size: 16px !important; border-radius: 24px !important; }
   .preference-tags { flex-wrap: wrap; }
   .preference-tag :deep(.ant-checkbox-wrapper) { padding: 6px 12px; font-size: 12px; }
   .section-title { font-size: 15px !important; }
+  .loading-container { padding: 16px !important; }
   .loading-status { font-size: 15px !important; }
   .loading-time, .loading-agent { font-size: 12px !important; }
+  .days-display-compact { height: 36px !important; }
 }
 
 /* 动画 */

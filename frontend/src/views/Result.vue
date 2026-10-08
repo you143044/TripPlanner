@@ -151,7 +151,7 @@
               <a-divider orientation="left">🎯 景点安排</a-divider>
               <a-list
                 :data-source="day.attractions"
-                :grid="{ gutter: 16, column: 2 }"
+                :grid="{ gutter: 16, xs: 1, sm: 1, md: 2 }"
               >
                 <template #renderItem="{ item, index }">
                   <a-list-item>
@@ -257,7 +257,7 @@
         <a-card id="weather" v-if="tripPlan.weather_info && tripPlan.weather_info.length > 0" title="天气信息" style="margin-top: 20px" :bordered="false">
         <a-list
           :data-source="tripPlan.weather_info"
-          :grid="{ gutter: 16, column: 3 }"
+          :grid="{ gutter: 16, xs: 2, sm: 2, md: 3 }"
         >
           <template #renderItem="{ item }">
             <a-list-item>
@@ -1424,27 +1424,42 @@ const drawRoutes = (AMap: any, attractions: any[]) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-  .result-container { padding: 10px 6px !important; }
-  .page-header { flex-direction: column !important; gap: 8px !important; padding: 8px !important; }
+  .result-container { padding: 10px 6px 30px !important; }
+  .page-header { flex-direction: column !important; gap: 8px !important; padding: 0 !important; margin-bottom: 12px !important; }
   .page-header button { font-size: 12px !important; padding: 4px 10px !important; }
-  .content-wrapper { flex-direction: column !important; }
+  .page-header :deep(.ant-space) { flex-wrap: wrap !important; justify-content: center !important; row-gap: 8px !important; }
+  .content-wrapper { flex-direction: column !important; gap: 12px !important; }
   .side-nav { display: none !important; }
   .main-content { width: 100% !important; padding: 0 !important; }
   .top-info-section { flex-direction: column !important; gap: 10px !important; }
-  .left-info, .right-map { width: 100% !important; }
+  .left-info { flex: none !important; width: 100% !important; gap: 10px !important; }
+  .right-map { flex: none !important; width: 100% !important; }
+  /* 地图卡片:取消 500px 固定高度,避免下方大片空白 */
+  .map-card { min-height: auto !important; height: auto !important; margin-bottom: 10px !important; }
+  .map-card :deep(.ant-card-body) { height: auto !important; padding: 0 !important; }
   #amap-container { height: 220px !important; }
-  .overview-card, .budget-card, .map-card, .days-card { margin-bottom: 10px !important; }
+  /* 景点图片:降高,减少竖向占用 */
+  .attraction-image { height: 150px !important; }
   .attraction-card { margin-bottom: 8px !important; }
-  .day-header { flex-direction: column !important; gap: 4px !important; }
+  .day-header { flex-direction: row !important; flex-wrap: wrap !important; gap: 4px !important; }
+  .day-info { padding: 10px !important; margin-bottom: 12px !important; }
   .day-info .info-row { flex-direction: column !important; gap: 2px !important; }
-  .hotel-card .ant-descriptions { font-size: 12px !important; }
-  .ant-card-head { padding: 8px 12px !important; }
-  .ant-card-body { padding: 10px !important; }
-  .ant-collapse-header { padding: 10px !important; }
+  .info-row .label { min-width: 0 !important; }
+  .hotel-card :deep(.ant-descriptions) { font-size: 12px !important; }
+  /* 卡片/折叠面板内边距(必须用 :deep,否则作用不到子组件内部) */
+  :deep(.ant-card-head) { padding: 8px 12px !important; }
+  :deep(.ant-card-head-title) { font-size: 15px !important; }
+  :deep(.ant-card-body) { padding: 12px !important; }
+  :deep(.ant-collapse-header) { padding: 10px !important; }
+  :deep(.ant-collapse-content-box) { padding: 12px !important; }
   .budget-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
   .budget-item { padding: 10px !important; }
-  .budget-total { padding: 14px !important; }
+  .budget-value { font-size: 17px !important; }
+  .budget-total { padding: 12px !important; }
+  .total-value { font-size: 22px !important; }
   .overview-content .info-item { flex-direction: column !important; }
+  .weather-info-row { gap: 8px !important; }
+  .weather-value { font-size: 15px !important; }
 }
 </style>
 

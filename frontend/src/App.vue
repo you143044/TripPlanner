@@ -77,5 +77,14 @@
   .header-link { font-size: 13px !important; padding: 4px 8px !important; }
   .header-right { gap: 8px !important; }
 }
+
+@media (max-width: 480px) {
+  .app-header { padding: 0 8px !important; }
+  .header-title { font-size: 14px !important; }
+  .header-link { font-size: 12px !important; padding: 3px 6px !important; }
+  .header-right { gap: 4px !important; }
+  .app-content { padding: 6px !important; }
+  .ant-layout-footer { padding: 12px 8px !important; font-size: 12px !important; }
+}
 </style>
 
