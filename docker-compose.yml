@@ -44,6 +44,8 @@ services:
       - backend
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      # Basic Auth密码文件(服务器上生成,已gitignore不入仓库)
+      - ./nginx_htpasswd:/etc/nginx/.htpasswd:ro
 
 volumes:
   postgres_data:

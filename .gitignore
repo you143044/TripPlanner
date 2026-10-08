@@ -4,6 +4,9 @@
 !.env.example
 !.env.production.example
 
+# nginx Basic Auth密码文件(服务器上生成)
+nginx_htpasswd
+
 # 依赖
 node_modules/
 backend/venv/
