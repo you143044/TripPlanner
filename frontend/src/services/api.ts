@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { TripFormData, TaskInfo, TaskDetail, HistoryResponse } from '@/types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// 生产环境默认同源(由nginx代理/api到后端),本地开发用localhost:8000
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/' : 'http://localhost:8000')
 
 const USER_ID_KEY = 'trip_planner_user_id'
 
