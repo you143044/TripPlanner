@@ -1,212 +1,120 @@
-# HelloAgents智能旅行助手 🌍✈️
+# HelloAgents 智能旅行助手 🌍✈️
 
-基于HelloAgents框架构建的智能旅行规划助手,集成高德地图MCP服务,提供个性化的旅行计划生成。
+基于 **HelloAgents** 框架构建的多智能体 AI 旅行规划助手。输入目的地、日期与偏好，自动调用高德地图查询真实景点/天气/酒店，由双模型协同生成完整的多日行程，支持计划持久化、历史回看与一键导出。
 
 ## ✨ 功能特点
 
-- 🤖 **AI驱动的旅行规划**: 基于HelloAgents框架的SimpleAgent,智能生成详细的多日旅程
-- 🗺️ **高德地图集成**: 通过MCP协议接入高德地图服务,支持景点搜索、路线规划、天气查询
-- 🧠 **智能工具调用**: Agent自动调用高德地图MCP工具,获取实时POI、路线和天气信息
-- 🎨 **现代化前端**: Vue3 + TypeScript + Vite,响应式设计,流畅的用户体验
-- 📱 **完整功能**: 包含住宿、交通、餐饮和景点游览时间推荐
+- 🤖 **多智能体协同**：景点搜索 / 天气查询 / 酒店推荐 / 行程规划 四个子 Agent（Flash 快速检索 + Pro 深度规划双模型）
+- 🗺️ **高德真实数据**：POI 直连高德 REST（真实经纬度、地址、电话），天气预报、公交/驾车路线规划
+- ⏱️ **异步任务模式**：提交后立即返回 `task_id`，服务端限流排队（并发上限可配），前端轮询真实进度（排队序号 + 各阶段状态）
+- 💾 **计划持久化**：每次生成完整结果入库（PostgreSQL / SQLite），按用户（浏览器 UUID）区分，历史记录随时回看
+- 🖼️ **持久化缓存**：景点图片 URL（后端缓存 + localStorage）与真实坐标落库，历史查看零重复外部调用
+- 📱 **完整功能**：每日行程、住宿/交通/餐饮推荐、天气、预算、地图标记、PDF 导出
+- 🔒 **安全防护**：敏感词内容审核、LLM 反注入、任务归属校验、提交限流、请求体限制、生产环境关闭 API 文档
 
 ## 🏗️ 技术栈
 
 ### 后端
-- **框架**: HelloAgents (基于SimpleAgent)
-- **API**: FastAPI
-- **MCP工具**: amap-mcp-server (高德地图)
-- **LLM**: 支持多种LLM提供商(OpenAI, DeepSeek等)
+- **框架**：FastAPI + HelloAgents（SimpleAgent 多智能体）
+- **LLM**：双模型配置（Flash 检索 + Pro 规划，兼容 OpenAI/DeepSeek 等）
+- **地图**：高德地图 REST API（POI / 天气 / 地理编码 / 路线）
+- **数据库**：SQLAlchemy + PostgreSQL（生产）/ SQLite（本地）
+- **日志**：Loguru（按天滚动、保留 7 天、结构化）
 
 ### 前端
-- **框架**: Vue 3 + TypeScript
-- **构建工具**: Vite
-- **UI组件库**: Ant Design Vue
-- **地图服务**: 高德地图 JavaScript API
-- **HTTP客户端**: Axios
+- Vue 3 + TypeScript + Vite + Ant Design Vue
+- 高德地图 JS API（地图标记与路线展示）
+- 路由懒加载（按页分包，首屏更快）
 
 ## 📁 项目结构
 
 ```
 helloagents-trip-planner/
-├── backend/                    # 后端服务
+├── backend/
 │   ├── app/
-│   │   ├── agents/            # Agent实现
-│   │   │   └── trip_planner_agent.py
-│   │   ├── api/               # FastAPI路由
-│   │   │   ├── main.py
-│   │   │   └── routes/
-│   │   │       ├── trip.py
-│   │   │       └── map.py
-│   │   ├── services/          # 服务层
-│   │   │   ├── amap_service.py
-│   │   │   └── llm_service.py
-│   │   ├── models/            # 数据模型
-│   │   │   └── schemas.py
-│   │   └── config.py          # 配置管理
+│   │   ├── agents/          # 多智能体行程规划
+│   │   ├── api/routes/      # FastAPI路由(trip/map/poi)
+│   │   ├── core/            # 日志、安全(限流/内容审核)
+│   │   ├── db/              # 数据库连接与ORM模型
+│   │   ├── models/          # Pydantic Schema
+│   │   ├── services/        # 高德/LLM/Unsplash/任务调度
+│   │   └── config.py        # 配置管理
 │   ├── requirements.txt
-│   ├── .env.example
-│   └── .gitignore
-├── frontend/                   # 前端应用
-│   ├── src/
-│   │   ├── components/        # Vue组件
-│   │   ├── services/          # API服务
-│   │   ├── types/             # TypeScript类型
-│   │   └── views/             # 页面视图
-│   ├── package.json
-│   └── vite.config.ts
+│   └── .env.example         # 配置模板(占位符)
+├── frontend/
+│   └── src/
+│       ├── views/           # Home / Result / History
+│       ├── services/        # API封装
+│       └── types/           # TS类型
+├── docker-compose.yml       # nginx + FastAPI + PostgreSQL
+├── .env.production.example  # 生产配置模板
 └── README.md
 ```
 
 ## 🚀 快速开始
 
-### 前提条件
+### 本地开发（SQLite，零额外依赖）
 
-- Python 3.10+
-- Node.js 16+
-- 高德地图API密钥 (Web服务API和Web端(JS API))
-- LLM API密钥 (OpenAI/DeepSeek等)
-
-### 后端安装
-
-1. 进入后端目录
 ```bash
+# 后端
 cd backend
-```
-
-2. 创建虚拟环境
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. 安装依赖
-```bash
+cp .env.example .env            # 填写 LLM_API_KEY / AMAP_API_KEY
 pip install -r requirements.txt
-```
+python run.py                   # http://localhost:8000
 
-4. 配置环境变量
-```bash
-cp .env.example .env
-# 编辑.env文件,填入你的API密钥
-```
-
-5. 启动后端服务
-```bash
-uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### 前端安装
-
-1. 进入前端目录
-```bash
+# 前端
 cd frontend
-```
-
-2. 安装依赖
-```bash
+cp .env.example .env            # 填写高德 Web 端 JS API Key
 npm install
+npm run dev                     # http://localhost:5173
 ```
 
-3. 配置环境变量
+### 生产部署（Docker Compose + PostgreSQL）
+
 ```bash
-# 创建.env文件, 填入高德地图Web API Key 和 Web端JS API Key
-cp .env.example .env
+cp .env.production.example .env.production   # 填入真实密钥,务必修改 POSTGRES_PASSWORD
+docker compose up -d --build
 ```
 
-4. 启动开发服务器
-```bash
-npm run dev
-```
+一键拉起 `nginx(80) + FastAPI(8000) + PostgreSQL(5432)`，日志与数据库使用持久化卷。
 
-5. 打开浏览器访问 `http://localhost:5173`
+## 🔌 API 概览
+
+| 端点 | 说明 |
+|------|------|
+| `POST /api/trip/plan` | 提交生成任务，返回 `task_id`（限流：每 IP+用户 60s 内 10 次） |
+| `GET /api/trip/plan/{task_id}` | 轮询任务状态（仅限本人，防越权） |
+| `GET /api/trip/history` | 当前用户的历史生成记录（分页、倒序） |
+| `GET /api/map/poi` | 关键词搜索 POI（真实坐标） |
+| `GET /api/map/weather` | 城市天气预报 |
+| `POST /api/map/route` | 公交/驾车/步行路线规划 |
+| `GET /api/poi/photo` | 景点图片（Unsplash，带缓存） |
+| `GET /health` | 健康检查 |
+
+生产环境默认关闭 `/docs`（通过 `DOCS_ENABLED` 控制）。
+
+## 🔒 安全设计
+
+- **内容安全**：额外要求输入经敏感词审核，命中直接拒绝（400），不进入 LLM
+- **Prompt 注入**：子 Agent 提示词内置反注入规则，用户输入无法改变系统行为
+- **越权防护**：任务详情仅创建者可查，他人/匿名一律 404
+- **防滥用**：提交接口 IP+用户级限流、请求体大小限制（64KB）
+- **信息隐藏**：生产关闭 API 文档，500 错误不泄露内部细节
+- **密钥管理**：全部 `.env` 文件 gitignore 排除，仓库仅含占位模板；nginx 隐藏版本号并附加安全响应头
 
 ## 📝 使用指南
 
-1. 在首页填写旅行信息:
-   - 目的地城市
-   - 旅行日期和天数
-   - 交通方式偏好
-   - 住宿偏好
-   - 旅行风格标签
+1. 首页填写目的地、日期、天数、交通/住宿/偏好与额外要求
+2. 点击"开始规划我的旅行"→ 排队 → 实时查看各 Agent 工作进度
+3. 获得完整行程：每日景点/酒店/三餐/预算、天气、地图标记
+4. 生成记录自动保存，顶部"📋 我的历史"随时回看
 
-2. 点击"生成旅行计划"按钮
-
-3. 系统将:
-   - 调用HelloAgents Agent生成初步计划
-   - Agent自动调用高德地图MCP工具搜索景点
-   - Agent获取天气信息和路线规划
-   - 整合所有信息生成完整行程
-
-4. 查看结果:
-   - 每日详细行程
-   - 景点信息与地图标记
-   - 交通路线规划
-   - 天气预报
-   - 餐饮推荐
-
-## 🔧 核心实现
-
-### HelloAgents Agent集成
-
-```python
-from hello_agents import SimpleAgent, HelloAgentsLLM
-from hello_agents.tools import MCPTool
-
-# 创建高德地图MCP工具
-amap_tool = MCPTool(
-    name="amap",
-    server_command=["uvx", "amap-mcp-server"],
-    env={"AMAP_MAPS_API_KEY": "your_api_key"},
-    auto_expand=True
-)
-
-# 创建旅行规划Agent
-agent = SimpleAgent(
-    name="旅行规划助手",
-    llm=HelloAgentsLLM(),
-    system_prompt="你是一个专业的旅行规划助手..."
-)
-
-# 添加工具
-agent.add_tool(amap_tool)
-```
-
-### MCP工具调用
-
-Agent可以自动调用以下高德地图MCP工具:
-- `maps_text_search`: 搜索景点POI
-- `maps_weather`: 查询天气
-- `maps_direction_walking_by_address`: 步行路线规划
-- `maps_direction_driving_by_address`: 驾车路线规划
-- `maps_direction_transit_integrated_by_address`: 公共交通路线规划
-
-## 📄 API文档
-
-启动后端服务后,访问 `http://localhost:8000/docs` 查看完整的API文档。
-
-主要端点:
-- `POST /api/trip/plan` - 生成旅行计划
-- `GET /api/map/poi` - 搜索POI
-- `GET /api/map/weather` - 查询天气
-- `POST /api/map/route` - 规划路线
-
-## 🤝 贡献指南
-
-欢迎提交Pull Request或Issue!
-
-## 📜 开源协议
+## 📄 许可证
 
 CC BY-NC-SA 4.0
 
 ## 🙏 致谢
 
-- [HelloAgents](https://github.com/datawhalechina/Hello-Agents) - 智能体教程
-- [HelloAgents框架](https://github.com/jjyaoao/HelloAgents) - 智能体框架
+- [HelloAgents 框架](https://github.com/jjyaoao/HelloAgents) - 多智能体框架
 - [高德地图开放平台](https://lbs.amap.com/) - 地图服务
-- [amap-mcp-server](https://github.com/sugarforever/amap-mcp-server) - 高德地图MCP服务器
-
----
-
-**HelloAgents智能旅行助手** - 让旅行计划变得简单而智能 🌈
-
+- [Unsplash](https://unsplash.com/) - 景点图片
