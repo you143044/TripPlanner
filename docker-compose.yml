@@ -21,8 +21,9 @@ services:
     build: ./backend
     container_name: trip-planner-backend
     restart: always
+    # 端口仅绑本机回环,不对外暴露(nginx经Docker内网代理backend:8000)
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - .env.production
     environment:
