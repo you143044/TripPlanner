@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trip-planner-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: trip
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-trip-secret-change-me}"
+      POSTGRES_DB: trip_planner
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trip -d trip_planner"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: trip-planner-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: "postgresql+psycopg2://trip:${POSTGRES_PASSWORD:-trip-secret-change-me}@postgres:5432/trip_planner"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - backend_logs:/app/logs
+
+  frontend:
+    build: ./frontend
+    container_name: trip-planner-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  postgres_data:
+  backend_logs:

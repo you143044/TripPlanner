@@ -1,0 +1,33 @@
+# 密钥与本地配置 —— 一律不提交
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# 依赖
+node_modules/
+backend/venv/
+backend/.venv/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 构建产物
+frontend/dist/
+frontend/.vite/
+*.log
+
+# 数据库文件
+*.db
+*.db-journal
+
+# 日志目录
+backend/logs/
+
+# 本地/工具目录
+.conda/
+.vscode/
+.idea/
+.DS_Store
